@@ -129,6 +129,11 @@
   <ItemGroup>
     <ClCompile Include="Cinema_Ticketing_System.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="movie.txt" />
+    <Text Include="seat.txt" />
+    <Text Include="ticket.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
