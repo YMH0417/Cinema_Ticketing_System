@@ -81,23 +81,34 @@ public:
         file.close();
     }
 
-    // 保存售票信息
-    void saveTicketStatus(const string& filename) {
-        ofstream file(filename);
-        if (!file) {
-            cerr << "无法保存售票情况到文件: " << filename << endl;
-            return;
-        }
+    // 新增函数: 加载座位分布信息
+    void loadSeatInfo(const string& filename) {
+        ifstream file(filename);
+        validateFileStream(file, filename);
 
-        for (size_t i = 0; i < ticketData.size(); i++) {
-            file << i + 1 << " " << ticketData[i].size() << " " << ticketData[i][0].size() << endl;
-            for (const auto& row : ticketData[i]) {
-                for (int val : row) {
-                    file << val << " ";
+        int rows, cols;
+        cout << "座位分布信息如下：" << endl;
+        int hallNumber = 1;
+
+        while (file >> rows >> cols) {
+            cout << "放映厅 " << hallNumber++ << " (" << rows << " x " << cols << "):" << endl;
+            vector<vector<int>> seats(rows, vector<int>(cols));
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    file >> seats[r][c];
+                    if (seats[r][c] == AVAILABLE) {
+                        cout << "□";
+                    }
+                    else if (seats[r][c] == SOLD) {
+                        cout << "●";
+                    }
+                    else if (seats[r][c] == DAMAGED) {
+                        cout << "X";
+                    }
                 }
-                file << endl;
+                cout << endl;
             }
-            file << endl;
+            cout << endl;
         }
         file.close();
     }
@@ -165,7 +176,6 @@ public:
         auto& seat = ticketData[movieId - 1][row - 1][col - 1];
         if (seat == AVAILABLE) {
             seat = SOLD;
-            saveTicketStatus("ticket.txt");
             cout << "购票成功！" << endl;
         }
         else {
@@ -183,7 +193,6 @@ public:
         auto& seat = ticketData[movieId - 1][row - 1][col - 1];
         if (seat == SOLD) {
             seat = AVAILABLE;
-            saveTicketStatus("ticket.txt");
             cout << "退票成功！" << endl;
         }
         else {
@@ -215,19 +224,17 @@ public:
         vector<pair<double, Movie>> revenues;
         for (const auto& movie : movies) {
             double revenue = calculateRevenue(movie.id);
-            revenues.push_back(make_pair(revenue, movie));
+            revenues.emplace_back(revenue, movie);
         }
 
-        // 排序
         sort(revenues.begin(), revenues.end(), [](const pair<double, Movie>& a, const pair<double, Movie>& b) {
-            return a.first > b.first; // 按票房从高到低排序
+            return a.first > b.first;
             });
 
-        // 输出结果
         cout << "当天票房排序：" << endl;
-        for (size_t i = 0; i < revenues.size(); ++i) {
-            cout << "影片: " << revenues[i].second.name
-                << ", 收入: " << revenues[i].first << " 元" << endl;
+        for (const auto& r : revenues) {
+            cout << "影片: " << r.second.name
+                << ", 收入: " << fixed << setprecision(2) << r.first << " 元" << endl;
         }
     }
 };
@@ -236,15 +243,81 @@ int main() {
     CinemaSystem system;
     system.initialize("movie.txt", "ticket.txt");
 
-    // 示例功能调用
-    system.queryHallSchedule(1);  // 查询第1放映厅的所有排片信息
-    system.queryTickets(1);       // 查询第1场次的售票情况
-    system.buyTicket(1, 2, 3);    // 第1场次购票
-    system.queryTickets(1);       // 再次查看售票情况
-    system.refundTicket(1, 2, 2); // 退票
-    system.queryTickets(1);       // 再次查看售票情况
-    cout << "《MovieA》的票款: " << system.calculateRevenue(1) << " 元" << endl;
-    system.sortMoviesByRevenue(); // 排序票房
+    int choice;
+    do {
+        cout << "\n===== 影院售票系统菜单 =====" << endl;
+        cout << "[1] 从文件中读取每个放映厅的座位分布信息" << endl;
+        cout << "[2] 从文件中读取每个放映厅的排片信息" << endl;
+        cout << "[3] 统计某部电影当天的票款" << endl;
+        cout << "[4] 对当天的票房进行排序" << endl;
+        cout << "[5] 查询某个放映厅某个放映时段的售票情况" << endl;
+        cout << "[6] 选座购票" << endl;
+        cout << "[7] 退票" << endl;
+        cout << "[0] 退出系统" << endl;
+        cout << "请选择功能: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1: {
+            system.loadSeatInfo("seat.txt");
+            break;
+        }
+        case 2: {
+            int hallId;
+            cout << "请输入放映厅编号: ";
+            cin >> hallId;
+            system.queryHallSchedule(hallId);
+            break;
+        }
+        case 3: {
+            int movieId;
+            cout << "请输入电影编号: ";
+            cin >> movieId;
+            cout << "票款总计: " << fixed << setprecision(2)
+                << system.calculateRevenue(movieId) << " 元" << endl;
+            break;
+        }
+        case 4: {
+            system.sortMoviesByRevenue();
+            break;
+        }
+        case 5: {
+            int movieId;
+            cout << "请输入电影编号: ";
+            cin >> movieId;
+            system.queryTickets(movieId);
+            break;
+        }
+        case 6: {
+            int movieId, row, col;
+            cout << "请输入电影编号: ";
+            cin >> movieId;
+            cout << "请输入座位行号: ";
+            cin >> row;
+            cout << "请输入座位列号: ";
+            cin >> col;
+            system.buyTicket(movieId, row, col);
+            break;
+        }
+        case 7: {
+            int movieId, row, col;
+            cout << "请输入电影编号: ";
+            cin >> movieId;
+            cout << "请输入座位行号: ";
+            cin >> row;
+            cout << "请输入座位列号: ";
+            cin >> col;
+            system.refundTicket(movieId, row, col);
+            break;
+        }
+        case 0:
+            cout << "系统退出，再见！" << endl;
+            break;
+        default:
+            cout << "无效选择，请重新输入！" << endl;
+            break;
+        }
+    } while (choice != 0);
 
     return 0;
 }
