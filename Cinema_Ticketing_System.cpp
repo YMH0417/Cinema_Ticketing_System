@@ -290,6 +290,7 @@ int main() {
             int movieId, row, col;
             cout << "请输入电影编号:";
             cin >> movieId;
+            system.queryTickets(movieId);
             cout << "请输入座位行号:";
             cin >> row;
             cout << "请输入座位列号:";
@@ -301,6 +302,7 @@ int main() {
             int movieId, row, col;
             cout << "请输入电影编号:";
             cin >> movieId;
+            system.queryTickets(movieId);
             cout << "请输入座位行号:";
             cin >> row;
             cout << "请输入座位列号:";
