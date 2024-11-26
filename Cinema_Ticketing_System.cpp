@@ -81,33 +81,61 @@ public:
         file.close();
     }
 
-    // 加载座位分布信息
-    void loadSeatInfo(const string& filename) {
-        ifstream file(filename);
-        validateFileStream(file, filename);
-
-        int rows, cols;
-        int hallNumber = 1;
-
-        while (file >> rows >> cols) {
-            cout << "-----第" << hallNumber++ << "放映厅座位图-----" << endl;
-            cout << "(" << rows << "x" << cols << "): " << endl;
-            vector<vector<int>> seats(rows, vector<int>(cols));
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    file >> seats[r][c];
-                    if (seats[r][c] == AVAILABLE) {
-                        cout << "□";
-                    }
-                    else {
-                        cout << "X";
-                    }
-                }
-                cout << endl;
-            }
-            cout << "□:正常 X:异常" << endl;
+    // 统计某部电影的票款
+    double calculateRevenue(int movieId, bool printDetails = true) {
+        if (movieId < 1 || movieId > static_cast<int>(movies.size())) {
+            cerr << "无效的场次编号！" << endl;
+            return 0;
         }
-        file.close();
+
+        double revenue = 0;
+        const auto& movie = movies[movieId - 1];
+        for (const auto& row : ticketData[movieId - 1]) {
+            for (int seat : row) {
+                if (seat == SOLD) {
+                    revenue += movie.price;
+                }
+            }
+        }
+        if (printDetails) {
+            cout << "单价:" << movie.price << " 售出:" << (int)(revenue / movie.price);
+        }
+        return revenue;
+    }
+
+    // 对当天票房排序
+    void sortMoviesByRevenue() {
+        vector<pair<double, Movie>> revenues;
+        for (const auto& movie : movies) {
+            double revenue = calculateRevenue(movie.id, false); // 不打印详细信息
+            revenues.emplace_back(revenue, movie);
+        }
+
+        sort(revenues.begin(), revenues.end(), [](const pair<double, Movie>& a, const pair<double, Movie>& b) {
+            return a.first > b.first;
+            });
+
+        cout << "当天票房排序" << endl;
+        for (const auto& r : revenues) {
+            cout << "影片:" << r.second.name
+                << " 收入:" << fixed << setprecision(2) << r.first << " 元" << endl;
+        }
+    }
+
+    // 显示座位情况
+    void displaySeats(const vector<vector<int>>& seats) {
+        for (const auto& row : seats) {
+            for (int val : row) {
+                if (val == AVAILABLE)
+                    cout << "□";
+                else if (val == SOLD)
+                    cout << "●";
+                else
+                    cout << "X";
+            }
+            cout << endl;
+        }
+        cout << "●:已售出 □:可售 X:不可售" << endl;
     }
 
     // 查询某个放映厅的所有排片信息
@@ -147,22 +175,6 @@ public:
         displaySeats(ticketData[movieId - 1]);
     }
 
-    // 显示座位情况
-    void displaySeats(const vector<vector<int>>& seats) {
-        for (const auto& row : seats) {
-            for (int val : row) {
-                if (val == AVAILABLE)
-                    cout << "□";
-                else if (val == SOLD)
-                    cout << "●";
-                else
-                    cout << "X";
-            }
-            cout << endl;
-        }
-        cout << "●:已售出 □:可售 X:不可售" << endl;
-    }
-
     // 购票
     void buyTicket(int movieId, int row, int col) {
         if (movieId < 1 || movieId > static_cast<int>(ticketData.size())) {
@@ -197,43 +209,33 @@ public:
         }
     }
 
-    // 统计某部电影的票款
-    double calculateRevenue(int movieId) {
-        if (movieId < 1 || movieId > static_cast<int>(movies.size())) {
-            cerr << "无效的场次编号！" << endl;
-            return 0;
-        }
+    // 加载座位分布信息
+    void loadSeatInfo(const string& filename) {
+        ifstream file(filename);
+        validateFileStream(file, filename);
 
-        double revenue = 0;
-        const auto& movie = movies[movieId - 1];
-        for (const auto& row : ticketData[movieId - 1]) {
-            for (int seat : row) {
-                if (seat == SOLD) {
-                    revenue += movie.price;
+        int rows, cols;
+        int hallNumber = 1;
+
+        while (file >> rows >> cols) {
+            cout << "-----第" << hallNumber++ << "放映厅座位图-----" << endl;
+            cout << "(" << rows << "x" << cols << "): " << endl;
+            vector<vector<int>> seats(rows, vector<int>(cols));
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    file >> seats[r][c];
+                    if (seats[r][c] == AVAILABLE) {
+                        cout << "□";
+                    }
+                    else {
+                        cout << "X";
+                    }
                 }
+                cout << endl;
             }
+            cout << "□:正常 X:异常" << endl;
         }
-        cout << "单价:" << movie.price << " 售出:" << revenue / movie.price;
-        return revenue;
-    }
-
-    // 对当天票房排序
-    void sortMoviesByRevenue() {
-        vector<pair<double, Movie>> revenues;
-        for (const auto& movie : movies) {
-            double revenue = calculateRevenue(movie.id);
-            revenues.emplace_back(revenue, movie);
-        }
-
-        sort(revenues.begin(), revenues.end(), [](const pair<double, Movie>& a, const pair<double, Movie>& b) {
-            return a.first > b.first;
-            });
-
-        cout << "当天票房排序" << endl;
-        for (const auto& r : revenues) {
-            cout << "影片:" << r.second.name
-                << " 收入:" << fixed << setprecision(2) << r.first << " 元" << endl;
-        }
+        file.close();
     }
 };
 
