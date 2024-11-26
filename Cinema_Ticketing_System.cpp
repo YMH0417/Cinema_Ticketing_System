@@ -4,14 +4,14 @@
 #include <string>
 #include <iomanip>
 #include <algorithm>
-
+#include <cstdlib>
 using namespace std;
 
 // 座位状态常量
 enum SeatStatus {
     AVAILABLE = 0,  // 可售
     SOLD = 1,       // 已售出
-    DAMAGED = 2     // 损坏
+    DAMAGED = 2     // 不可用
 };
 
 // 电影信息类
@@ -81,17 +81,17 @@ public:
         file.close();
     }
 
-    // 新增函数: 加载座位分布信息
+    // 加载座位分布信息
     void loadSeatInfo(const string& filename) {
         ifstream file(filename);
         validateFileStream(file, filename);
 
         int rows, cols;
-        cout << "座位分布信息如下：" << endl;
         int hallNumber = 1;
 
         while (file >> rows >> cols) {
-            cout << "放映厅 " << hallNumber++ << " (" << rows << " x " << cols << "):" << endl;
+            cout << "-----第" << hallNumber++ << "放映厅座位图-----" << endl;
+            cout << "(" << rows << "x" << cols << "): " << endl;
             vector<vector<int>> seats(rows, vector<int>(cols));
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
@@ -99,35 +99,32 @@ public:
                     if (seats[r][c] == AVAILABLE) {
                         cout << "□";
                     }
-                    else if (seats[r][c] == SOLD) {
-                        cout << "●";
-                    }
-                    else if (seats[r][c] == DAMAGED) {
+                    else {
                         cout << "X";
                     }
                 }
                 cout << endl;
             }
-            cout << endl;
+            cout << "□:正常 X:异常" << endl;
         }
         file.close();
     }
 
     // 查询某个放映厅的所有排片信息
     void queryHallSchedule(int hallId) {
-        if (hallId < 1) {
+        if (hallId < 1 || hallId > 5) {
             cerr << "无效的放映厅编号！" << endl;
             return;
         }
 
-        cout << "----- 第" << hallId << "放映厅排片信息 -----" << endl;
+        cout << "-----第" << hallId << "放映厅排片信息-----" << endl;
         bool found = false;
         for (const auto& movie : movies) {
             if (movie.hallId == hallId) {
-                cout << "序号: " << movie.id
-                    << ", 影片: " << movie.name
-                    << ", 时段: " << movie.timeSlot
-                    << ", 票价: " << fixed << setprecision(2) << movie.price << " 元" << endl;
+                cout << "序号:" << movie.id
+                    << " 影片:" << movie.name
+                    << " 时段:" << movie.timeSlot
+                    << " 票价:" << fixed << setprecision(2) << movie.price << " 元" << endl;
                 found = true;
             }
         }
@@ -144,9 +141,9 @@ public:
         }
 
         const auto& movie = movies[movieId - 1];
-        cout << "----- 第" << movie.hallId << "放映厅 -----" << endl;
-        cout << "放映时段: " << movie.timeSlot << endl;
-        cout << "影片名: " << movie.name << endl;
+        cout << "-----第" << movie.hallId << "放映厅-----" << endl;
+        cout << "放映时段:" << movie.timeSlot << endl;
+        cout << "影片名:" << movie.name << endl;
         displaySeats(ticketData[movieId - 1]);
     }
 
@@ -163,7 +160,7 @@ public:
             }
             cout << endl;
         }
-        cout << "●: 已售出, □: 可售, X: 损坏" << endl;
+        cout << "●:已售出 □:可售 X:不可售" << endl;
     }
 
     // 购票
@@ -216,6 +213,7 @@ public:
                 }
             }
         }
+        cout << "单价:" << movie.price << " 售出:" << revenue / movie.price;
         return revenue;
     }
 
@@ -231,10 +229,10 @@ public:
             return a.first > b.first;
             });
 
-        cout << "当天票房排序：" << endl;
+        cout << "当天票房排序" << endl;
         for (const auto& r : revenues) {
-            cout << "影片: " << r.second.name
-                << ", 收入: " << fixed << setprecision(2) << r.first << " 元" << endl;
+            cout << "影片:" << r.second.name
+                << " 收入:" << fixed << setprecision(2) << r.first << " 元" << endl;
         }
     }
 };
@@ -245,16 +243,16 @@ int main() {
 
     int choice;
     do {
-        cout << "\n===== 影院售票系统菜单 =====" << endl;
-        cout << "[1] 从文件中读取每个放映厅的座位分布信息" << endl;
-        cout << "[2] 从文件中读取每个放映厅的排片信息" << endl;
-        cout << "[3] 统计某部电影当天的票款" << endl;
-        cout << "[4] 对当天的票房进行排序" << endl;
-        cout << "[5] 查询某个放映厅某个放映时段的售票情况" << endl;
-        cout << "[6] 选座购票" << endl;
+        cout << "=====影院售票系统菜单=====" << endl;
+        cout << "[1] 获取每个放映厅的座位分布图" << endl;
+        cout << "[2] 获取每个放映厅的排片信息" << endl;
+        cout << "[3] 统计单部电影当天票款" << endl;
+        cout << "[4] 当天票房排序" << endl;
+        cout << "[5] 获取单部电影售票情况" << endl;
+        cout << "[6] 购票" << endl;
         cout << "[7] 退票" << endl;
         cout << "[0] 退出系统" << endl;
-        cout << "请选择功能: ";
+        cout << "请选择功能:";
         cin >> choice;
 
         switch (choice) {
@@ -263,18 +261,16 @@ int main() {
             break;
         }
         case 2: {
-            int hallId;
-            cout << "请输入放映厅编号: ";
-            cin >> hallId;
-            system.queryHallSchedule(hallId);
+            for (int hallId =1; hallId <=5; hallId++)
+                system.queryHallSchedule(hallId);
             break;
         }
         case 3: {
             int movieId;
-            cout << "请输入电影编号: ";
+            cout << "请输入电影编号:";
             cin >> movieId;
-            cout << "票款总计: " << fixed << setprecision(2)
-                << system.calculateRevenue(movieId) << " 元" << endl;
+            cout << " 票款总计:" << fixed << setprecision(2)
+                << system.calculateRevenue(movieId) << "元" << endl;
             break;
         }
         case 4: {
@@ -283,40 +279,43 @@ int main() {
         }
         case 5: {
             int movieId;
-            cout << "请输入电影编号: ";
+            cout << "请输入电影编号:";
             cin >> movieId;
             system.queryTickets(movieId);
             break;
         }
         case 6: {
             int movieId, row, col;
-            cout << "请输入电影编号: ";
+            cout << "请输入电影编号:";
             cin >> movieId;
-            cout << "请输入座位行号: ";
+            cout << "请输入座位行号:";
             cin >> row;
-            cout << "请输入座位列号: ";
+            cout << "请输入座位列号:";
             cin >> col;
             system.buyTicket(movieId, row, col);
             break;
         }
         case 7: {
             int movieId, row, col;
-            cout << "请输入电影编号: ";
+            cout << "请输入电影编号:";
             cin >> movieId;
-            cout << "请输入座位行号: ";
+            cout << "请输入座位行号:";
             cin >> row;
-            cout << "请输入座位列号: ";
+            cout << "请输入座位列号:";
             cin >> col;
             system.refundTicket(movieId, row, col);
             break;
         }
         case 0:
-            cout << "系统退出，再见！" << endl;
+            cout << "系统退出！" << endl;
             break;
         default:
             cout << "无效选择，请重新输入！" << endl;
             break;
         }
+        char cls_help=getchar();
+        cls_help = getchar();
+        ::system("cls");
     } while (choice != 0);
 
     return 0;
