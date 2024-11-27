@@ -128,9 +128,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Cinema_Ticketing_System.cpp" />
+    <ClCompile Include="Cinema_Ticketing_System.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="rsatest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Text Include="input.txt" />
     <Text Include="movie.txt" />
     <Text Include="seat.txt" />
     <Text Include="ticket.txt" />

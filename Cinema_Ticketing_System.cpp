@@ -124,14 +124,27 @@ public:
 
     // 显示座位情况
     void displaySeats(const vector<vector<int>>& seats) {
-        for (const auto& row : seats) {
-            for (int val : row) {
+        // 计算列号的最大宽度（用于动态调整对齐）
+        int maxColWidth = to_string(seats[0].size()).length();
+
+        // 输出列号
+        cout << string(maxColWidth, ' ') << " "; // 留出空间给行号
+        for (size_t col = 0; col < seats[0].size(); ++col) {
+            cout << col + 1 << string(3 - to_string(col + 1).length(), ' '); // 动态调整间距
+        }
+        cout << endl;
+
+        for (size_t i = 0; i < seats.size(); ++i) {
+            // 输出行号
+            cout << i + 1 << string(maxColWidth - to_string(i + 1).length() + 1, ' '); // 动态调整间距
+
+            for (int val : seats[i]) {
                 if (val == AVAILABLE)
-                    cout << "□";
+                    cout << "□  "; // 每个座位后加两个空格
                 else if (val == SOLD)
-                    cout << "●";
+                    cout << "●  ";
                 else
-                    cout << "X";
+                    cout << "X  ";
             }
             cout << endl;
         }
@@ -220,15 +233,29 @@ public:
         while (file >> rows >> cols) {
             cout << "-----第" << hallNumber++ << "放映厅座位图-----" << endl;
             cout << "(" << rows << "x" << cols << "): " << endl;
+
+            // 动态调整列号宽度
+            int maxColWidth = to_string(cols).length();
+
+            // 输出列号
+            cout << string(maxColWidth, ' ') << " "; // 留出空间给行号
+            for (int col = 0; col < cols; ++col) {
+                cout << col + 1 << string(3 - to_string(col + 1).length(), ' '); // 动态调整间距
+            }
+            cout << endl;
+
             vector<vector<int>> seats(rows, vector<int>(cols));
             for (int r = 0; r < rows; r++) {
+                // 输出行号
+                cout << r + 1 << string(maxColWidth - to_string(r + 1).length() + 1, ' ');
+
                 for (int c = 0; c < cols; c++) {
                     file >> seats[r][c];
                     if (seats[r][c] == AVAILABLE) {
-                        cout << "□";
+                        cout << "□  "; // 每个座位后加两个空格
                     }
                     else {
-                        cout << "X";
+                        cout << "X  ";
                     }
                 }
                 cout << endl;
@@ -237,6 +264,7 @@ public:
         }
         file.close();
     }
+
 };
 
 int main() {
@@ -287,6 +315,8 @@ int main() {
             break;
         }
         case 6: {
+            for (int hallId = 1; hallId <= 5; hallId++)
+                system.queryHallSchedule(hallId);
             int movieId, row, col;
             cout << "请输入电影编号:";
             cin >> movieId;
@@ -299,6 +329,8 @@ int main() {
             break;
         }
         case 7: {
+            for (int hallId = 1; hallId <= 5; hallId++)
+                system.queryHallSchedule(hallId);
             int movieId, row, col;
             cout << "请输入电影编号:";
             cin >> movieId;
