@@ -287,6 +287,8 @@ int main() {
             break;
         }
         case 6: {
+            for (int hallId = 1; hallId <= 5; hallId++)
+                system.queryHallSchedule(hallId);
             int movieId, row, col;
             cout << "请输入电影编号:";
             cin >> movieId;
