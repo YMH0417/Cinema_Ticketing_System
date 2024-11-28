@@ -13,12 +13,10 @@ using namespace std;
 long long modExp(long long base, long long exp, long long mod) {
     long long result = 1;
     base = base % mod;
-
     while (exp > 0) {
-        if (exp % 2 == 1) // 如果exp是奇数
+        if (exp % 2 == 1)
             result = (result * base) % mod;
-
-        exp = exp >> 1; // exp除以2
+        exp = exp >> 1;
         base = (base * base) % mod;
     }
     return result;
@@ -31,15 +29,12 @@ bool readPubKey(const string& pubkeyFile, long long& p, long long& n) {
         cerr << "无法打开公钥文件：" << pubkeyFile << endl;
         return false;
     }
-
     in >> p >> n;
     in.close();
-
     if (p <= 0 || n <= 0) {
         cerr << "公钥格式错误。" << endl;
         return false;
     }
-
     return true;
 }
 
@@ -50,19 +45,16 @@ bool readPrivKey(const string& prikeyFile, long long& q, long long& n) {
         cerr << "无法打开私钥文件：" << prikeyFile << endl;
         return false;
     }
-
     in >> q >> n;
     in.close();
-
     if (q <= 0 || n <= 0) {
         cerr << "私钥格式错误。" << endl;
         return false;
     }
-
     return true;
 }
 
-// 计算欧拉函数 phi(n) = (p - 1)(q - 1)
+// 计算欧拉函数
 long long eulerTotient(long long p, long long q) {
     return (p - 1) * (q - 1);
 }
@@ -83,117 +75,86 @@ long long modInverse(long long a, long long m) {
     for (long long x = 1; x < m; ++x) {
         if ((a * x) % m == 1) return x;
     }
-    return -1; // 不存在模逆
+    return -1;
 }
 
 // 解密文件
 void decryptFile(const string& inputFile, const string& outputFile, long long q, long long n, long long d) {
     ifstream in(inputFile, ios::binary);
     ofstream out(outputFile, ios::binary);
-
     if (!in.is_open() || !out.is_open()) {
         cerr << "无法打开文件：" << inputFile << endl;
         return;
     }
-
     long long encryptedByte;
     while (in.read(reinterpret_cast<char*>(&encryptedByte), sizeof(encryptedByte))) {
-        char decryptedByte = static_cast<char>(modExp(encryptedByte, d, n)); // 使用私钥解密
+        char decryptedByte = static_cast<char>(modExp(encryptedByte, d, n));
         out.put(decryptedByte);
     }
-
     in.close();
     out.close();
-
-    cout << "文件解密完成: " << outputFile << endl;
 }
 
 // 解密多个文件
 void decryptFiles(const string& pubkeyFile, const string& prikeyFile) {
     long long p, q, n, d;
-
-    // 从 pubkey.txt 中读取公钥
     if (!readPubKey(pubkeyFile, p, n)) {
-        return; // 如果读取公钥失败，退出程序
-    }
-
-    // 从 prikey.txt 中读取私钥
-    if (!readPrivKey(prikeyFile, q, n)) {
-        return; // 如果读取私钥失败，退出程序
-    }
-
-    // 计算欧拉函数 φ(n)
-    long long phi = eulerTotient(p, q);
-
-    // 计算私钥 d
-    d = modInverse(p, phi);
-
-    if (d == -1) {
-        cerr << "无法计算私钥 d" << endl;
         return;
     }
-
-    cout << "私钥 d: " << d << endl;
-
+    if (!readPrivKey(prikeyFile, q, n)) {
+        return;
+    }
+    long long phi = eulerTotient(p, q);
+    // 计算私钥 d
+    d = modInverse(p, phi);
+    if (d == -1) {
+        cerr << "无法计算私钥。" << endl;
+        return;
+    }
     // 待解密的文件列表
     string inputFiles[] = { "seat.bin", "movie.bin", "ticket.bin" };
     string outputFiles[] = { "seat.txt", "movie.txt", "ticket.txt" };
-
-    // 对每个文件进行解密
     for (int i = 0; i < 3; ++i) {
         decryptFile(inputFiles[i], outputFiles[i], q, n, d);
     }
+    cout << "数据文件已成功从缓存中加载。" << endl;
 }
 
 // 加密文件
 void encryptFile(const string& inputFile, const string& outputFile, long long e, long long n) {
     ifstream in(inputFile, ios::binary);
     ofstream out(outputFile, ios::binary);
-
     if (!in.is_open() || !out.is_open()) {
         cerr << "无法打开文件：" << inputFile << endl;
         return;
     }
-
     char byte;
     while (in.get(byte)) {
         long long encryptedByte = modExp(byte, e, n); // 使用公钥加密
         out.write(reinterpret_cast<char*>(&encryptedByte), sizeof(encryptedByte));
     }
-
     in.close();
     out.close();
-
-    cout << "文件加密完成: " << outputFile << endl;
 }
 
 // 加密多个文件
 void encryptFiles(const string& pubkeyFile) {
     long long p, n;
-
-    // 从 pubkey.txt 中读取公钥
     if (!readPubKey(pubkeyFile, p, n)) {
-        return; // 如果读取公钥失败，退出程序
+        return;
     }
-
-    cout << "公钥 e: " << p << ", n: " << n << endl;
-
     // 待加密的文件列表
     string inputFiles[] = { "seat.txt", "movie.txt", "ticket.txt" };
     string outputFiles[] = { "seat.bin", "movie.bin", "ticket.bin" };
-
-    // 对每个文件进行加密
     for (int i = 0; i < 3; ++i) {
         encryptFile(inputFiles[i], outputFiles[i], p, n);
     }
 }
 
+// 删除文件
 void deleteFile(const string& filename) {
     if (remove(filename.c_str()) != 0) {
         cerr << "删除文件失败: " << filename << endl;
-    }
-    else {
-        cout << "文件已成功删除: " << filename << endl;
     }
 }
 
@@ -212,7 +173,6 @@ public:
     string timeSlot;     // 放映时段
     double price;        // 票价
     int hallId;          // 放映厅编号
-
     Movie(int i, string n, string t, double p, int h)
         : id(i), name(n), timeSlot(t), price(p), hallId(h) {
     }
@@ -223,11 +183,10 @@ class CinemaSystem {
 private:
     vector<Movie> movies;                  // 所有电影信息
     vector<vector<vector<int>>> ticketData; // 所有场次的售票信息
-
     void validateFileStream(ifstream& file, const string& filename) {
         if (!file.is_open()) {
             cerr << "无法打开文件: " << filename << endl;
-            exit(EXIT_FAILURE);  // 确保程序在读取文件失败时退出
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -242,11 +201,9 @@ public:
     void loadMovieInfo(const string& filename) {
         ifstream file(filename);
         validateFileStream(file, filename);
-
         int id, hallId;
         string name, timeSlot;
         double price;
-
         while (file >> id >> hallId >> name >> timeSlot >> price) {
             movies.emplace_back(id, name, timeSlot, price, hallId);
         }
@@ -257,7 +214,6 @@ public:
     void loadTicketStatus(const string& filename) {
         ifstream file(filename);
         validateFileStream(file, filename);
-
         int id, rows, cols;
         while (file >> id >> rows >> cols) {
             vector<vector<int>> matrix(rows, vector<int>(cols));
@@ -277,7 +233,6 @@ public:
             cerr << "无效的场次编号！" << endl;
             return 0;
         }
-
         double revenue = 0;
         const auto& movie = movies[movieId - 1];
         for (const auto& row : ticketData[movieId - 1]) {
@@ -300,11 +255,9 @@ public:
             double revenue = calculateRevenue(movie.id, false); // 不打印详细信息
             revenues.emplace_back(revenue, movie);
         }
-
         sort(revenues.begin(), revenues.end(), [](const pair<double, Movie>& a, const pair<double, Movie>& b) {
             return a.first > b.first;
             });
-
         cout << "当天票房排序" << endl;
         for (const auto& r : revenues) {
             cout << "影片:" << r.second.name
@@ -314,23 +267,17 @@ public:
 
     // 显示座位情况
     void displaySeats(const vector<vector<int>>& seats) {
-        // 计算列号的最大宽度（用于动态调整对齐）
         int maxColWidth = to_string(seats[0].size()).length();
-
-        // 输出列号
-        cout << string(maxColWidth, ' ') << " "; // 留出空间给行号
+        cout << string(maxColWidth, ' ') << " ";
         for (size_t col = 0; col < seats[0].size(); ++col) {
-            cout << col + 1 << string(3 - to_string(col + 1).length(), ' '); // 动态调整间距
+            cout << col + 1 << string(3 - to_string(col + 1).length(), ' ');
         }
         cout << endl;
-
         for (size_t i = 0; i < seats.size(); ++i) {
-            // 输出行号
-            cout << i + 1 << string(maxColWidth - to_string(i + 1).length() + 1, ' '); // 动态调整间距
-
+            cout << i + 1 << string(maxColWidth - to_string(i + 1).length() + 1, ' ');
             for (int val : seats[i]) {
                 if (val == AVAILABLE)
-                    cout << "□  "; // 每个座位后加两个空格
+                    cout << "□  ";
                 else if (val == SOLD)
                     cout << "●  ";
                 else
@@ -347,7 +294,6 @@ public:
             cerr << "无效的放映厅编号！" << endl;
             return;
         }
-
         cout << "-----第" << hallId << "放映厅排片信息-----" << endl;
         bool found = false;
         for (const auto& movie : movies) {
@@ -360,17 +306,16 @@ public:
             }
         }
         if (!found) {
-            cout << "该放映厅暂无排片信息！" << endl;
+            cout << "该放映厅暂无排片信息。" << endl;
         }
     }
 
     // 查询某场次的售票情况
     void queryTickets(int movieId) {
         if (movieId < 1 || movieId > static_cast<int>(movies.size())) {
-            cerr << "无效的场次编号！" << endl;
+            cerr << "无效的场次编号." << endl;
             return;
         }
-
         const auto& movie = movies[movieId - 1];
         cout << "-----第" << movie.hallId << "放映厅-----" << endl;
         cout << "放映时段:" << movie.timeSlot << endl;
@@ -385,14 +330,12 @@ public:
             cerr << "无法打开文件: " << filename << endl;
             return;
         }
-
         int movieId = 0;
         for (const auto& matrix : ticketData) {
             int rows = matrix.size();
             int cols = matrix[0].size();
             movieId++;
             file << movieId << " " << rows << " " << cols << endl;
-
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
                     file << matrix[r][c] << " ";
@@ -401,7 +344,6 @@ public:
             }
             file << endl;
         }
-
         file.close();
         cout << "座位状态已保存到文件!" << endl;
     }
@@ -412,12 +354,11 @@ public:
             cerr << "无效的场次编号！" << endl;
             return;
         }
-
         auto& seat = ticketData[movieId - 1][row - 1][col - 1];
         if (seat == AVAILABLE) {
             seat = SOLD;
             cout << "购票成功！" << endl;
-            saveTicketStatus("ticket.txt"); // 保存到文件
+            saveTicketStatus("ticket.txt");
         }
         else {
             cout << "该座位无法购买！" << endl;
@@ -435,22 +376,19 @@ public:
         if (seat == SOLD) {
             seat = AVAILABLE;
             cout << "退票成功！" << endl;
-            saveTicketStatus("ticket.txt"); // 保存到文件
+            saveTicketStatus("ticket.txt");
         }
         else {
             cout << "该座位无法退票！" << endl;
         }
     }
 
-
     // 加载座位分布信息
     void loadSeatInfo(const string& filename) {
         ifstream file(filename);
         validateFileStream(file, filename);
-
         int rows, cols;
         int hallNumber = 1;
-
         while (file >> rows >> cols) {
             cout << "-----第" << hallNumber++ << "放映厅座位图-----" << endl;
             cout << "(" << rows << "x" << cols << "): " << endl;
@@ -489,19 +427,13 @@ public:
 };
 
 int main() {
-    string pubkeyFile = "pubkey.txt"; // 公钥文件
-    string prikeyFile = "prikey.txt"; // 私钥文件
-
-    
-
     // 调用解密函数
+    string pubkeyFile = "pubkey.txt";
+    string prikeyFile = "prikey.txt";
     decryptFiles(pubkeyFile, prikeyFile);
-    cout << 1;
 
     CinemaSystem system;
     system.initialize("movie.txt", "ticket.txt");
-    
-
     int choice;
     do {
         cout << "=====影院售票系统菜单=====" << endl;

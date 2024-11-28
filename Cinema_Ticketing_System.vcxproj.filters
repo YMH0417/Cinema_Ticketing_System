@@ -18,22 +18,14 @@
     <ClCompile Include="Cinema_Ticketing_System.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Key_Generation.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="RSA_Encryption.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="RSA_Decryption.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="prikey.txt">
+    <ClCompile Include="Tools\Key_Generation.cpp">
       <Filter>资源文件</Filter>
-    </Text>
-    <Text Include="pubkey.txt">
+    </ClCompile>
+    <ClCompile Include="Tools\RSA_Decryption.cpp">
       <Filter>资源文件</Filter>
-    </Text>
+    </ClCompile>
+    <ClCompile Include="Tools\RSA_Encryption.cpp">
+      <Filter>资源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
