@@ -258,7 +258,6 @@ public:
         sort(revenues.begin(), revenues.end(), [](const pair<double, Movie>& a, const pair<double, Movie>& b) {
             return a.first > b.first;
             });
-        cout << "当天票房排序" << endl;
         for (const auto& r : revenues) {
             cout << "影片:" << r.second.name
                 << " 收入:" << fixed << setprecision(2) << r.first << " 元" << endl;
