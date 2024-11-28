@@ -130,7 +130,7 @@ void encryptFile(const string& inputFile, const string& outputFile, long long e,
     }
     char byte;
     while (in.get(byte)) {
-        long long encryptedByte = modExp(byte, e, n); // 使用公钥加密
+        long long encryptedByte = modExp(byte, e, n);
         out.write(reinterpret_cast<char*>(&encryptedByte), sizeof(encryptedByte));
     }
     in.close();
@@ -230,7 +230,7 @@ public:
     // 统计某部电影的票款
     double calculateRevenue(int movieId, bool printDetails = true) {
         if (movieId < 1 || movieId > static_cast<int>(movies.size())) {
-            cerr << "无效的场次编号！" << endl;
+            cerr << "无效的场次编号。" << endl;
             return 0;
         }
         double revenue = 0;
@@ -252,7 +252,7 @@ public:
     void sortMoviesByRevenue() {
         vector<pair<double, Movie>> revenues;
         for (const auto& movie : movies) {
-            double revenue = calculateRevenue(movie.id, false); // 不打印详细信息
+            double revenue = calculateRevenue(movie.id, false);
             revenues.emplace_back(revenue, movie);
         }
         sort(revenues.begin(), revenues.end(), [](const pair<double, Movie>& a, const pair<double, Movie>& b) {
@@ -345,41 +345,40 @@ public:
             file << endl;
         }
         file.close();
-        cout << "座位状态已保存到文件!" << endl;
+        cout << "座位状态已保存到文件。" << endl;
     }
 
     // 购票操作
     void buyTicket(int movieId, int row, int col) {
         if (movieId < 1 || movieId > static_cast<int>(ticketData.size())) {
-            cerr << "无效的场次编号！" << endl;
+            cerr << "无效的场次编号。" << endl;
             return;
         }
         auto& seat = ticketData[movieId - 1][row - 1][col - 1];
         if (seat == AVAILABLE) {
             seat = SOLD;
-            cout << "购票成功！" << endl;
+            cout << "购票成功。" << endl;
             saveTicketStatus("ticket.txt");
         }
         else {
-            cout << "该座位无法购买！" << endl;
+            cout << "该座位无法购买。" << endl;
         }
     }
 
     // 退票操作
     void refundTicket(int movieId, int row, int col) {
         if (movieId < 1 || movieId > static_cast<int>(ticketData.size())) {
-            cerr << "无效的场次编号！" << endl;
+            cerr << "无效的场次编号。" << endl;
             return;
         }
-
         auto& seat = ticketData[movieId - 1][row - 1][col - 1];
         if (seat == SOLD) {
             seat = AVAILABLE;
-            cout << "退票成功！" << endl;
+            cout << "退票成功。" << endl;
             saveTicketStatus("ticket.txt");
         }
         else {
-            cout << "该座位无法退票！" << endl;
+            cout << "该座位无法退票。" << endl;
         }
     }
 
@@ -392,26 +391,19 @@ public:
         while (file >> rows >> cols) {
             cout << "-----第" << hallNumber++ << "放映厅座位图-----" << endl;
             cout << "(" << rows << "x" << cols << "): " << endl;
-
-            // 动态调整列号宽度
             int maxColWidth = to_string(cols).length();
-
-            // 输出列号
-            cout << string(maxColWidth, ' ') << " "; // 留出空间给行号
+            cout << string(maxColWidth, ' ') << " ";
             for (int col = 0; col < cols; ++col) {
-                cout << col + 1 << string(3 - to_string(col + 1).length(), ' '); // 动态调整间距
+                cout << col + 1 << string(3 - to_string(col + 1).length(), ' ');
             }
             cout << endl;
-
             vector<vector<int>> seats(rows, vector<int>(cols));
             for (int r = 0; r < rows; r++) {
-                // 输出行号
                 cout << r + 1 << string(maxColWidth - to_string(r + 1).length() + 1, ' ');
-
                 for (int c = 0; c < cols; c++) {
                     file >> seats[r][c];
                     if (seats[r][c] == AVAILABLE) {
-                        cout << "□  "; // 每个座位后加两个空格
+                        cout << "□  ";
                     }
                     else {
                         cout << "X  ";
@@ -423,7 +415,6 @@ public:
         }
         file.close();
     }
-
 };
 
 int main() {
@@ -432,6 +423,7 @@ int main() {
     string prikeyFile = "prikey.txt";
     decryptFiles(pubkeyFile, prikeyFile);
 
+    // 实现系统功能
     CinemaSystem system;
     system.initialize("movie.txt", "ticket.txt");
     int choice;
@@ -489,6 +481,7 @@ int main() {
             cout << "请输入座位列号:";
             cin >> col;
             system.buyTicket(movieId, row, col);
+            encryptFiles(pubkeyFile);
             break;
         }
         case 7: {
@@ -503,17 +496,18 @@ int main() {
             cout << "请输入座位列号:";
             cin >> col;
             system.refundTicket(movieId, row, col);
+            encryptFiles(pubkeyFile);
             break;
         }
         case 0:
-            cout << "系统退出！" << endl;
+            cout << "系统退出。" << endl;
             encryptFiles(pubkeyFile);
             deleteFile("seat.txt");
             deleteFile("movie.txt");
             deleteFile("ticket.txt");
             break;
         default:
-            cout << "无效选择，请重新输入！" << endl;
+            cout << "无效选择，请重新输入。" << endl;
             break;
         }
         char cls_help = getchar();
